@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Gmail</title>
+  <link rel="icon" type="image/png" href="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&display=swap" />
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+  <style>
+    body { font-family: 'Roboto', -apple-system, BlinkMacSystemFont, sans-serif; -webkit-tap-highlight-color: transparent; }
+    .material-symbols-outlined { font-variation-settings: 'FILL' 0, 'wght' 350; font-size: 22px; }
+    .fill-icon { font-variation-settings: 'FILL' 1; }
+    
+    /* Custom mobile avatar glow ring */
+    .avatar-ring {
+      background: linear-gradient(135deg, #4285f4, #9b72cb, #d96570, #1ba0e2);
+      padding: 1.5px;
+      border-radius: 9999px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+  </style>
+</head>
+<body class="bg-[#f6f8fc] h-screen flex flex-col text-[#1f1f1f] overflow-hidden select-none">
+
+  <!-- TOP MOBILE SEARCH CAPSULE -->
+  <div class="pt-3 px-3 pb-2 shrink-0">
+    <div class="bg-white shadow-[0_1px_3px_0_rgba(60,64,67,0.3),0_4px_8px_3px_rgba(60,64,67,0.15)] rounded-full h-12 flex items-center px-3 gap-3">
+      <button onclick="toggleDrawer(true)" class="p-1 text-gray-700 active:bg-gray-100 rounded-full">
+        <span class="material-symbols-outlined">menu</span>
+      </button>
+      
+      <input 
+        id="searchInput" 
+        oninput="handleSearch()" 
+        type="text" 
+        placeholder="Search in mail" 
+        class="flex-1 bg-transparent outline-none text-sm text-gray-800 placeholder-gray-500" 
+      />
+
+      <!-- "A" Profile Avatar with AI Gradient Glow -->
+      <div class="avatar-ring cursor-pointer" onclick="alert('Account: user@gmail.com')">
+        <div class="w-7 h-7 rounded-full bg-[#c2185b] border border-white text-white flex items-center justify-center font-bold text-xs">
+          A
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION TITLE / UNREAD BANNER -->
+  <div class="px-4 py-1.5 flex items-center justify-between text-xs text-gray-500 font-semibold uppercase tracking-wider shrink-0">
+    <span id="folderTitleDisplay">Inbox</span>
+    <span id="mailCountBadge">0</span>
+  </div>
+
+  <!-- EMAIL LIST CONTAINER (Mobile Scrolling Feed) -->
+  <main id="emailListView" class="flex-1 overflow-y-auto divide-y divide-gray-100 bg-white shadow-inner">
+    <!-- Rendered via JS -->
+  </main>
+
+  <!-- EMPTY STATE -->
+  <div id="emptyView" class="hidden flex-1 flex flex-col items-center justify-center text-gray-400 bg-white">
+    <span class="material-symbols-outlined !text-6xl text-gray-300 mb-2">inbox</span>
+    <p class="text-sm font-medium">No messages here</p>
+  </div>
+
+  <!-- MOBILE BOTTOM BAR (Mail / Meet tabs) -->
+  <nav class="h-14 bg-[#f2f6fc] border-t border-gray-200 flex items-center justify-around shrink-0 text-gray-600">
+    <button onclick="switchFolder('inbox')" class="flex flex-col items-center justify-center text-[#0b57d0] font-semibold text-xs gap-0.5 w-16">
+      <span class="material-symbols-outlined fill-icon !text-24px">mail</span>
+      <span>Mail</span>
+    </button>
+    <button onclick="alert('Meet video calls integration')" class="flex flex-col items-center justify-center text-gray-600 text-xs gap-0.5 w-16">
+      <span class="material-symbols-outlined !text-24px">videocam</span>
+      <span>Meet</span>
+    </button>
+  </nav>
+
+  <!-- FLOATING ACTION BUTTON (FAB: COMPOSE) -->
+  <button 
+    onclick="openComposeModal()" 
+    class="fixed bottom-20 right-4 bg-[#c2e7ff] text-[#001d35] px-4 py-3 rounded-2xl flex items-center gap-2 shadow-[0_4px_8px_3px_rgba(60,64,67,0.15)] active:scale-95 transition-transform z-30 font-medium text-sm">
+    <span class="material-symbols-outlined !text-20px">edit</span>
+    <span>Compose</span>
+  </button>
+
+  <!-- SLIDE-OVER NAVIGATION DRAWER -->
+  <div id="drawerOverlay" onclick="toggleDrawer(false)" class="hidden fixed inset-0 bg-black/50 z-40 transition-opacity"></div>
+  <aside id="drawer" class="fixed top-0 bottom-0 left-0 w-72 bg-white z-50 transform -translate-x-full transition-transform duration-250 ease-in-out flex flex-col shadow-2xl">
+    <div class="h-16 flex items-center px-5 border-b border-gray-100">
+      <img src="https://ssl.gstatic.com/ui/v1/icons/mail/rfr/logo_gmail_lockup_default_1x_r5.png" class="h-6 object-contain" alt="Gmail" />
+    </div>
+
+    <nav class="flex-1 overflow-y-auto p-2 space-y-1 text-sm font-medium text-gray-700">
+      <div onclick="switchFolderFromDrawer('inbox')" id="drawer-inbox" class="flex items-center justify-between px-4 py-3 rounded-full bg-[#d3e3fd] text-[#001d35] font-bold cursor-pointer">
+        <div class="flex items-center gap-4">
+          <span class="material-symbols-outlined fill-icon">inbox</span>
+          <span>Inbox</span>
+        </div>
+        <span id="drawerUnread" class="text-xs bg-blue-200 px-2 py-0.5 rounded-full text-blue-900 font-bold">0</span>
+      </div>
+      <div onclick="switchFolderFromDrawer('starred')" id="drawer-starred" class="flex items-center justify-between px-4 py-3 rounded-full hover:bg-gray-100 cursor-pointer">
+        <div class="flex items-center gap-4">
+          <span class="material-symbols-outlined">star</span>
+          <span>Starred</span>
+        </div>
+        <span id="drawerStarred" class="text-xs text-gray-500 font-semibold"></span>
+      </div>
+      <div onclick="switchFolderFromDrawer('sent')" id="drawer-sent" class="flex items-center justify-between px-4 py-3 rounded-full hover:bg-gray-100 cursor-pointer">
+        <div class="flex items-center gap-4">
+          <span class="material-symbols-outlined">send</span>
+          <span>Sent</span>
+        </div>
+      </div>
+      <div onclick="switchFolderFromDrawer('trash')" id="drawer-trash" class="flex items-center justify-between px-4 py-3 rounded-full hover:bg-gray-100 cursor-pointer">
+        <div class="flex items-center gap-4">
+          <span class="material-symbols-outlined">delete</span>
+          <span>Trash</span>
+        </div>
+      </div>
+
+      <div class="pt-4 border-t border-gray-100 px-4">
+        <button onclick="regenerateAprilDataset()" class="w-full text-xs bg-gray-100 border border-gray-300 py-2 rounded-lg text-gray-700 font-medium">
+          Reset 200 Mails (April–Sep)
+        </button>
+      </div>
+    </nav>
+
+    <div class="p-4 border-t border-gray-100 text-xs text-gray-500">
+      <div class="w-full bg-gray-200 h-1 rounded-full mb-1.5 overflow-hidden">
+        <div class="bg-blue-600 h-full w-1/3"></div>
+      </div>
+      <span>4.6 GB of 15 GB used</span>
+    </div>
+  </aside>
+
+  <!-- MOBILE EMAIL DETAIL FULL-SCREEN VIEW -->
+  <div id="emailDetailView" class="hidden fixed inset-0 bg-white z-50 flex flex-col">
+    <!-- Top Detail App Bar -->
+    <div class="h-14 flex items-center justify-between px-3 border-b border-gray-100">
+      <button onclick="closeDetailView()" class="p-2 text-gray-700">
+        <span class="material-symbols-outlined">arrow_back</span>
+      </button>
+      <div class="flex items-center gap-2 text-gray-600">
+        <button onclick="deleteActiveEmail()" class="p-2"><span class="material-symbols-outlined">delete</span></button>
+        <button onclick="toggleActiveStar()" class="p-2"><span id="detailStarIcon" class="material-symbols-outlined">star</span></button>
+        <button class="p-2"><span class="material-symbols-outlined">more_vert</span></button>
+      </div>
+    </div>
+
+    <!-- Scrollable Detail Body -->
+    <div class="flex-1 overflow-y-auto p-4 space-y-4">
+      <h1 id="detailSubject" class="text-xl font-medium text-gray-900 leading-snug"></h1>
+      
+      <div class="flex items-start gap-3">
+        <div id="detailAvatar" class="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0"></div>
+        <div class="flex-1 min-w-0">
+          <div class="flex items-baseline justify-between">
+            <span id="detailSender" class="font-bold text-sm text-gray-900 truncate"></span>
+            <span id="detailDate" class="text-xs text-gray-500 whitespace-nowrap"></span>
+          </div>
+          <div id="detailEmail" class="text-xs text-gray-500 truncate"></div>
+        </div>
+      </div>
+
+      <div id="detailBody" class="text-sm text-gray-800 leading-relaxed whitespace-pre-line border-t border-gray-100 pt-4"></div>
+    </div>
+
+    <!-- Mobile Reply Bar -->
+    <div class="h-14 border-t border-gray-200 px-4 flex items-center gap-3 bg-gray-50">
+      <button class="flex-1 py-2 border border-gray-300 bg-white rounded-full text-xs font-semibold text-gray-700 flex items-center justify-center gap-1.5">
+        <span class="material-symbols-outlined !text-16px">reply</span>
+        <span>Reply</span>
+      </button>
+      <button class="flex-1 py-2 border border-gray-300 bg-white rounded-full text-xs font-semibold text-gray-700 flex items-center justify-center gap-1.5">
+        <span class="material-symbols-outlined !text-16px">forward</span>
+        <span>Forward</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- MOBILE COMPOSE MODAL (Full Screen) -->
+  <div id="composeModal" class="hidden fixed inset-0 bg-white z-50 flex flex-col">
+    <div class="h-14 flex items-center justify-between px-3 border-b border-gray-200">
+      <div class="flex items-center gap-3">
+        <button type="button" onclick="closeComposeModal()" class="p-1 text-gray-600">
+          <span class="material-symbols-outlined">close</span>
+        </button>
+        <span class="font-medium text-base text-gray-800">Compose</span>
+      </div>
+      <button type="submit" form="composeForm" class="text-blue-600 p-2">
+        <span class="material-symbols-outlined !text-24px">send</span>
+      </button>
+    </div>
+
+    <form id="composeForm" onsubmit="handleSendMail(event)" class="flex-1 flex flex-col p-4 gap-3 overflow-y-auto">
+      <div class="flex items-center border-b border-gray-200 pb-2">
+        <span class="text-xs text-gray-500 w-16">From:</span>
+        <input id="inputSender" type="text" placeholder="Sender Name" class="flex-1 text-sm outline-none" required />
+      </div>
+      <div class="flex items-center border-b border-gray-200 pb-2">
+        <span class="text-xs text-gray-500 w-16">Email:</span>
+        <input id="inputEmail" type="email" placeholder="sender@college.edu" class="flex-1 text-sm outline-none" required />
+      </div>
+      <div class="flex items-center border-b border-gray-200 pb-2">
+        <span class="text-xs text-gray-500 w-16">Subject:</span>
+        <input id="inputSubject" type="text" placeholder="Subject line" class="flex-1 text-sm outline-none" required />
+      </div>
+      <div class="flex items-center border-b border-gray-200 pb-2">
+        <span class="text-xs text-gray-500 w-16">Folder:</span>
+        <select id="inputFolder" class="flex-1 text-sm outline-none bg-transparent">
+          <option value="inbox">Inbox</option>
+          <option value="sent">Sent</option>
+        </select>
+      </div>
+      <div class="flex items-center border-b border-gray-200 pb-2">
+        <span class="text-xs text-gray-500 w-16">Date:</span>
+        <input id="inputDate" type="date" class="flex-1 text-sm outline-none bg-transparent" />
+      </div>
+
+      <textarea id="inputBody" placeholder="Compose email..." class="flex-1 resize-none text-sm outline-none pt-2" required></textarea>
+    </form>
+  </div>
+
+  <script>
+    const avatarPalette = ['#1a73e8', '#d93025', '#1e8e3e', '#f9ab00', '#9334e6', '#e37400', '#007b83', '#5f6368'];
+    function getAvatarColor(name) {
+      let hash = 0;
+      for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash);
+      return avatarPalette[Math.abs(hash) % avatarPalette.length];
+    }
+
+    // Generate 200 real-looking emails from April to September 2026
+    function generateDatasetFromApril() {
+      const senders = [
+        { name: "Dean Academic Affairs", email: "academics@college.edu" },
+        { name: "Training & Placement Cell", email: "tnp@college.edu" },
+        { name: "Google Security Team", email: "no-reply@accounts.google.com" },
+        { name: "GitHub Notifications", email: "notifications@github.com" },
+        { name: "LeetCode Daily Challenge", email: "daily@leetcode.com" },
+        { name: "HOD Computer Science", email: "hod_cse@college.edu" },
+        { name: "Summer Internship Portal", email: "internships@college.edu" },
+        { name: "Amazon Web Services", email: "billing@amazon.com" },
+        { name: "Figma Team", email: "updates@figma.com" },
+        { name: "Annual Hackathon 2026", email: "hackathon@techfest.org" },
+        { name: "LinkedIn Job Alerts", email: "jobalerts@linkedin.com" },
+        { name: "Stripe Invoicing", email: "invoices@stripe.com" },
+        { name: "Spotify Premium", email: "offers@spotify.com" },
+        { name: "Zomato Delivery", email: "orders@zomato.com" },
+        { name: "Swiggy Instamart", email: "support@swiggy.in" },
+        { name: "GeeksforGeeks Contests", email: "contests@geeksforgeeks.org" }
+      ];
+
+      const subjects = [
+        "Schedule for End-Semester Examinations & Vivas",
+        "Approval of Summer Internship NOC and Offer Letter",
+        "Registration Open: Annual Inter-College Hackathon 2026",
+        "Shortlisted Candidates for Technical Assessment Round 1",
+        "Security Alert: New login detected on Linux browser",
+        "[PR #84] Fix state mutation and memory leak merged into main",
+        "Daily Challenge: Longest Substring Without Repeating Characters",
+        "Notice regarding Final Year Project Review & GitHub Repository",
+        "AWS Free Tier Alert: 85% of monthly limit reached",
+        "Collaborator invited you to edit project wireframes",
+        "5 new Software Engineer Intern openings match your profile",
+        "Monthly invoice statement & billing receipt ready",
+        "Your Student discount subscription has been renewed",
+        "Order Delivered: Enjoy your meal",
+        "Developer Round-up: Mastering Memory Layout in C++"
+      ];
+
+      const bodies = [
+        "Dear Students,\nPlease note that the final datesheet for semester examinations is now published. Clear all library dues before hall ticket release.",
+        "Your summer internship application and submitted offer letter have been approved by the departmental coordinator. You may commence training.",
+        "Teams of 3 to 4 members can register for the 36-hour offline hackathon starting next weekend. Mentors from tier-1 tech firms will evaluate initial prototypes.",
+        "Attached is the technical assessment schedule. Bring your college ID card and verify your workstation prior to test initiation.",
+        "A new sign-in was detected on your account in New Delhi, India. If this was you, no action is needed.",
+        "Team Lead has merged the latest branch commit into master. Automated CI/CD integration pipelines have passed all tests."
+      ];
+
+      const list = [];
+      const aprilFirst = new Date("2026-04-01T09:00:00").getTime();
+      const currentNow = Date.now();
+      const totalSpan = currentNow - aprilFirst;
+
+      for (let i = 1; i <= 200; i++) {
+        const sender = senders[i % senders.length];
+        const subject = subjects[(i * 3) % subjects.length];
+        const body = bodies[(i * 5) % bodies.length];
+
+        const ratio = (i - 1) / 199;
+        const timestamp = currentNow - (ratio * totalSpan) - Math.floor(Math.random() * 14400000);
+
+        let folder = "inbox";
+        if (i % 14 === 0) folder = "trash";
+        else if (i % 7 === 0) folder = "sent";
+
+        list.push({
+          id: i,
+          sender: folder === "sent" ? "To: " + sender.name : sender.name,
+          email: sender.email,
+          subject,
+          body,
+          timestamp,
+          folder,
+          starred: i % 8 === 0 && folder !== "trash",
+          unread: i <= 14 && folder === "inbox"
+        });
+      }
+
+      return list;
+    }
+
+    let emails = [];
+    try {
+      const saved = localStorage.getItem("gmail_mobile_april_2026");
+      emails = saved ? JSON.parse(saved) : [];
+      if (!Array.isArray(emails) || emails.length < 50) {
+        emails = generateDatasetFromApril();
+        localStorage.setItem("gmail_mobile_april_2026", JSON.stringify(emails));
+      }
+    } catch (e) {
+      emails = generateDatasetFromApril();
+    }
+
+    let activeFolder = "inbox";
+    let activeEmailId = null;
+
+    function saveState() {
+      emails.sort((a, b) => b.timestamp - a.timestamp);
+      localStorage.setItem("gmail_mobile_april_2026", JSON.stringify(emails));
+      render();
+    }
+
+    function regenerateAprilDataset() {
+      emails = generateDatasetFromApril();
+      activeFolder = "inbox";
+      saveState();
+      toggleDrawer(false);
+      alert("Loaded 200 emails starting from April 2026!");
+    }
+
+    function formatDate(ts) {
+      const d = new Date(ts);
+      const now = new Date();
+      if (d.toDateString() === now.toDateString()) {
+        return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+      }
+      return d.toLocaleDateString([], { month: 'short', day: 'numeric' });
+    }
+
+    function render() {
+      const listView = document.getElementById("emailListView");
+      const emptyView = document.getElementById("emptyView");
+      const query = document.getElementById("searchInput").value.toLowerCase().trim();
+
+      const filtered = emails.filter(m => {
+        let matchesFolder = false;
+        if (activeFolder === "inbox") matchesFolder = m.folder === "inbox";
+        else if (activeFolder === "starred") matchesFolder = m.starred && m.folder !== "trash";
+        else if (activeFolder === "sent") matchesFolder = m.folder === "sent";
+        else if (activeFolder === "trash") matchesFolder = m.folder === "trash";
+
+        if (!matchesFolder) return false;
+        if (!query) return true;
+        return m.sender.toLowerCase().includes(query) || 
+               m.subject.toLowerCase().includes(query) || 
+               m.body.toLowerCase().includes(query);
+      });
+
+      const unreadTotal = emails.filter(m => m.folder === "inbox" && m.unread).length;
+      document.getElementById("mailCountBadge").textContent = `${filtered.length} emails`;
+      document.getElementById("drawerUnread").textContent = unreadTotal;
+      document.getElementById("folderTitleDisplay").textContent = activeFolder;
+
+      const starTotal = emails.filter(m => m.starred && m.folder !== "trash").length;
+      document.getElementById("drawerStarred").textContent = starTotal > 0 ? starTotal : "";
+
+      listView.innerHTML = "";
+      if (filtered.length === 0) {
+        emptyView.classList.remove("hidden");
+        listView.classList.add("hidden");
+        return;
+      }
+
+      emptyView.classList.add("hidden");
+      listView.classList.remove("hidden");
+
+      filtered.forEach(mail => {
+        const item = document.createElement("div");
+        item.className = `flex items-start px-4 py-3 gap-3 active:bg-gray-100 transition-colors cursor-pointer ${mail.unread ? 'bg-white' : 'bg-[#f6f8fc]/40'}`;
+        
+        const cleanSenderName = mail.sender.replace("To: ", "");
+        const avatarColor = getAvatarColor(cleanSenderName);
+
+        item.innerHTML = `
+          <!-- Circular Letter Avatar -->
+          <div class="w-9 h-9 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0" style="background-color: ${avatarColor}">
+            ${cleanSenderName.charAt(0).toUpperCase()}
+          </div>
+
+          <!-- Middle Details -->
+          <div class="flex-1 min-w-0">
+            <div class="flex items-baseline justify-between mb-0.5">
+              <span class="text-sm ${mail.unread ? 'font-bold text-gray-900' : 'font-medium text-gray-700'} truncate pr-2">
+                ${mail.sender}
+              </span>
+              <span class="text-xs ${mail.unread ? 'font-bold text-blue-600' : 'text-gray-500'} whitespace-nowrap">
+                ${formatDate(mail.timestamp)}
+              </span>
+            </div>
+            <div class="text-xs ${mail.unread ? 'font-bold text-gray-900' : 'text-gray-800'} truncate mb-0.5">
+              ${mail.subject}
+            </div>
+            <div class="text-xs text-gray-500 truncate">
+              ${mail.body.replace(/\n/g, ' ')}
+            </div>
+          </div>
+
+          <!-- Star Icon -->
+          <button onclick="toggleStar(event, ${mail.id})" class="p-1 text-gray-400 self-center">
+            <span class="material-symbols-outlined !text-20px ${mail.starred ? 'fill-icon !text-yellow-400' : ''}">star</span>
+          </button>
+        `;
+
+        item.onclick = () => openEmail(mail.id);
+        listView.appendChild(item);
+      });
+    }
+
+    function toggleDrawer(open) {
+      const drawer = document.getElementById("drawer");
+      const overlay = document.getElementById("drawerOverlay");
+      if (open) {
+        overlay.classList.remove("hidden");
+        drawer.classList.remove("-translate-x-full");
+      } else {
+        overlay.classList.add("hidden");
+        drawer.classList.add("-translate-x-full");
+      }
+    }
+
+    function switchFolderFromDrawer(folder) {
+      ['inbox', 'starred', 'sent', 'trash'].forEach(f => {
+        const el = document.getElementById(`drawer-${f}`);
+        if (f === folder) {
+          el.className = "flex items-center justify-between px-4 py-3 rounded-full bg-[#d3e3fd] text-[#001d35] font-bold cursor-pointer";
+        } else {
+          el.className = "flex items-center justify-between px-4 py-3 rounded-full hover:bg-gray-100 cursor-pointer text-gray-700 font-medium";
+        }
+      });
+
+      activeFolder = folder;
+      toggleDrawer(false);
+      render();
+    }
+
+    function switchFolder(folder) {
+      switchFolderFromDrawer(folder);
+    }
+
+    function toggleStar(e, id) {
+      e.stopPropagation();
+      const mail = emails.find(m => m.id === id);
+      if (mail) {
+        mail.starred = !mail.starred;
+        saveState();
+      }
+    }
+
+    function toggleActiveStar() {
+      if (activeEmailId) {
+        const mail = emails.find(m => m.id === activeEmailId);
+        if (mail) {
+          mail.starred = !mail.starred;
+          document.getElementById("detailStarIcon").className = `material-symbols-outlined ${mail.starred ? 'fill-icon !text-yellow-400' : ''}`;
+          saveState();
+        }
+      }
+    }
+
+    function openEmail(id) {
+      const mail = emails.find(m => m.id === id);
+      if (!mail) return;
+
+      mail.unread = false;
+      activeEmailId = mail.id;
+      saveState();
+
+      document.getElementById("detailSubject").textContent = mail.subject;
+      document.getElementById("detailSender").textContent = mail.sender;
+      document.getElementById("detailEmail").textContent = `<${mail.email}>`;
+      document.getElementById("detailDate").textContent = new Date(mail.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+      document.getElementById("detailBody").textContent = mail.body;
+
+      const avatar = document.getElementById("detailAvatar");
+      avatar.textContent = mail.sender.replace("To: ", "").charAt(0).toUpperCase();
+      avatar.style.backgroundColor = getAvatarColor(mail.sender);
+
+      document.getElementById("detailStarIcon").className = `material-symbols-outlined ${mail.starred ? 'fill-icon !text-yellow-400' : ''}`;
+      document.getElementById("emailDetailView").classList.remove("hidden");
+    }
+
+    function closeDetailView() {
+      document.getElementById("emailDetailView").classList.add("hidden");
+      activeEmailId = null;
+    }
+
+    function deleteActiveEmail() {
+      if (activeEmailId) {
+        const mail = emails.find(m => m.id === activeEmailId);
+        if (mail) {
+          mail.folder = "trash";
+          saveState();
+          closeDetailView();
+        }
+      }
+    }
+
+    function openComposeModal() {
+      document.getElementById("inputDate").value = new Date().toISOString().slice(0, 10);
+      document.getElementById("composeModal").classList.remove("hidden");
+    }
+
+    function closeComposeModal() {
+      document.getElementById("composeForm").reset();
+      document.getElementById("composeModal").classList.add("hidden");
+    }
+
+    function handleSendMail(e) {
+      e.preventDefault();
+
+      const sender = document.getElementById("inputSender").value.trim();
+      const email = document.getElementById("inputEmail").value.trim();
+      const subject = document.getElementById("inputSubject").value.trim();
+      const folder = document.getElementById("inputFolder").value;
+      const dateVal = document.getElementById("inputDate").value;
+      const body = document.getElementById("inputBody").value.trim();
+
+      const timestamp = dateVal ? new Date(dateVal).getTime() + (Date.now() % 86400000) : Date.now();
+
+      emails.push({
+        id: Date.now(),
+        sender: folder === "sent" ? "To: " + sender : sender,
+        email,
+        subject,
+        body,
+        folder,
+        timestamp,
+        starred: false,
+        unread: true
+      });
+
+      saveState();
+      closeComposeModal();
+      if (activeFolder !== folder) switchFolder(folder);
+    }
+
+    function handleSearch() {
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
