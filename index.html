@@ -48,7 +48,7 @@
     </div>
   </div>
 
-  <!-- SECTION TITLE / UNREAD BANNER -->
+  <!-- SECTION BANNER -->
   <div class="px-4 py-1.5 flex items-center justify-between text-xs text-gray-500 font-semibold uppercase tracking-wider shrink-0">
     <span id="folderTitleDisplay">Inbox</span>
     <span id="mailCountBadge">0</span>
@@ -75,7 +75,7 @@
     </button>
   </nav>
 
-  <!-- FLOATING ACTION BUTTON (COMPOSE) -->
+  <!-- FAB COMPOSE BUTTON -->
   <button 
     onclick="openComposeModal()" 
     class="fixed bottom-20 right-4 bg-[#c2e7ff] text-[#001d35] px-4 py-3 rounded-2xl flex items-center gap-2 shadow-[0_4px_8px_3px_rgba(60,64,67,0.15)] active:scale-95 transition-transform z-30 font-medium text-sm">
@@ -120,7 +120,7 @@
 
       <div class="pt-4 border-t border-gray-100 px-4">
         <button onclick="regenerateAprilDataset()" class="w-full text-xs bg-gray-100 border border-gray-300 py-2 rounded-lg text-gray-700 font-medium">
-          Reset 200 Mails (With Docs)
+          Reset 200 Mails (With Logos & Signatures)
         </button>
       </div>
     </nav>
@@ -133,9 +133,8 @@
     </div>
   </aside>
 
-  <!-- MOBILE EMAIL DETAIL VIEW -->
+  <!-- MOBILE EMAIL DETAIL FULL-SCREEN VIEW -->
   <div id="emailDetailView" class="hidden fixed inset-0 bg-white z-50 flex flex-col">
-    <!-- Top Detail App Bar -->
     <div class="h-14 flex items-center justify-between px-3 border-b border-gray-100">
       <button onclick="closeDetailView()" class="p-2 text-gray-700">
         <span class="material-symbols-outlined">arrow_back</span>
@@ -147,12 +146,12 @@
       </div>
     </div>
 
-    <!-- Scrollable Detail Body -->
+    <!-- Scrollable Content -->
     <div class="flex-1 overflow-y-auto p-4 space-y-4">
       <h1 id="detailSubject" class="text-xl font-medium text-gray-900 leading-snug"></h1>
       
       <div class="flex items-start gap-3">
-        <div id="detailAvatar" class="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0"></div>
+        <div id="detailAvatarWrapper" class="shrink-0"></div>
         <div class="flex-1 min-w-0">
           <div class="flex items-baseline justify-between">
             <span id="detailSender" class="font-bold text-sm text-gray-900 truncate"></span>
@@ -162,9 +161,15 @@
         </div>
       </div>
 
+      <!-- Main Body Text -->
       <div id="detailBody" class="text-sm text-gray-800 leading-relaxed whitespace-pre-line border-t border-gray-100 pt-4"></div>
 
-      <!-- Attachment Cards Section in Detail -->
+      <!-- Sender Custom Inline/Signature Image -->
+      <div id="detailSignatureContainer" class="hidden pt-3">
+        <img id="detailSignatureImage" class="max-h-24 object-contain rounded border border-gray-200 p-1 bg-white shadow-xs" alt="Signature Logo" />
+      </div>
+
+      <!-- Attachment Cards Section -->
       <div id="detailAttachmentsContainer" class="hidden pt-4 border-t border-gray-100">
         <div class="text-xs font-semibold text-gray-500 mb-2 flex items-center gap-1">
           <span class="material-symbols-outlined !text-16px">attachment</span>
@@ -174,7 +179,7 @@
       </div>
     </div>
 
-    <!-- Mobile Action Footer -->
+    <!-- Bottom Actions -->
     <div class="h-14 border-t border-gray-200 px-4 flex items-center gap-3 bg-gray-50">
       <button class="flex-1 py-2 border border-gray-300 bg-white rounded-full text-xs font-semibold text-gray-700 flex items-center justify-center gap-1.5">
         <span class="material-symbols-outlined !text-16px">reply</span>
@@ -198,7 +203,7 @@
       </div>
       <div class="flex items-center gap-2">
         <!-- Paperclip attachment button -->
-        <label for="composeFileInput" class="p-2 text-gray-600 cursor-pointer active:bg-gray-100 rounded-full">
+        <label for="composeFileInput" class="p-2 text-gray-600 cursor-pointer active:bg-gray-100 rounded-full" title="Attach Document/PDF">
           <span class="material-symbols-outlined">attach_file</span>
         </label>
         <input type="file" id="composeFileInput" class="hidden" accept="image/*,.pdf,.doc,.docx" onchange="handleFileSelected(event)" />
@@ -212,15 +217,15 @@
     <form id="composeForm" onsubmit="handleSendMail(event)" class="flex-1 flex flex-col p-4 gap-3 overflow-y-auto">
       <div class="flex items-center border-b border-gray-200 pb-2">
         <span class="text-xs text-gray-500 w-16">From:</span>
-        <input id="inputSender" type="text" placeholder="Sender Name" class="flex-1 text-sm outline-none" required />
+        <input id="inputSender" type="text" placeholder="Sender Name (e.g. Ritika Verma)" class="flex-1 text-sm outline-none" required />
       </div>
       <div class="flex items-center border-b border-gray-200 pb-2">
         <span class="text-xs text-gray-500 w-16">Email:</span>
-        <input id="inputEmail" type="email" placeholder="sender@college.edu" class="flex-1 text-sm outline-none" required />
+        <input id="inputEmail" type="email" placeholder="hr@technova.com" class="flex-1 text-sm outline-none" required />
       </div>
       <div class="flex items-center border-b border-gray-200 pb-2">
         <span class="text-xs text-gray-500 w-16">Subject:</span>
-        <input id="inputSubject" type="text" placeholder="Subject line" class="flex-1 text-sm outline-none" required />
+        <input id="inputSubject" type="text" placeholder="Subject" class="flex-1 text-sm outline-none" required />
       </div>
       <div class="flex items-center border-b border-gray-200 pb-2">
         <span class="text-xs text-gray-500 w-16">Folder:</span>
@@ -234,7 +239,27 @@
         <input id="inputDate" type="date" class="flex-1 text-sm outline-none bg-transparent" />
       </div>
 
-      <!-- Attachment preview tray in compose -->
+      <!-- Upload Custom Sender Avatar/Logo -->
+      <div class="flex items-center justify-between py-1 border-b border-gray-200 text-xs">
+        <span class="text-gray-600 font-medium">Sender Avatar / Logo:</span>
+        <label for="senderLogoInput" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 cursor-pointer text-gray-700 flex items-center gap-1">
+          <span class="material-symbols-outlined !text-14px">image</span>
+          <span id="senderLogoLabel">Choose Image</span>
+        </label>
+        <input type="file" id="senderLogoInput" class="hidden" accept="image/*" onchange="handleSenderLogoUpload(event)" />
+      </div>
+
+      <!-- Upload Signature / Inline Logo (Like TechNova) -->
+      <div class="flex items-center justify-between py-1 border-b border-gray-200 text-xs">
+        <span class="text-gray-600 font-medium">Signature Banner / Logo:</span>
+        <label for="signatureImageInput" class="px-2.5 py-1 bg-gray-100 hover:bg-gray-200 rounded border border-gray-300 cursor-pointer text-gray-700 flex items-center gap-1">
+          <span class="material-symbols-outlined !text-14px">photo_camera</span>
+          <span id="signatureLogoLabel">Choose Logo</span>
+        </label>
+        <input type="file" id="signatureImageInput" class="hidden" accept="image/*" onchange="handleSignatureUpload(event)" />
+      </div>
+
+      <!-- Attachment tray -->
       <div id="composeAttachmentPreview" class="hidden flex flex-wrap gap-2 py-1"></div>
 
       <textarea id="inputBody" placeholder="Compose email..." class="flex-1 resize-none text-sm outline-none pt-2" required></textarea>
@@ -249,16 +274,14 @@
       return avatarPalette[Math.abs(hash) % avatarPalette.length];
     }
 
-    // Default pre-seeded documents and images
+    // SVG Data URL for TechNova branding
+    const technovaLogoDataUri = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='240' height='70' viewBox='0 0 240 70'><rect width='240' height='70' fill='white'/><path d='M15 15 H50 V25 H37 V55 H27 V25 H15 Z' fill='%23002b80'/><circle cx='46' cy='18' r='5' fill='%23007acc'/><text x='58' y='42' font-family='Arial, sans-serif' font-weight='bold' font-size='26' fill='%23002060'>TechNova</text><text x='60' y='57' font-family='Arial, sans-serif' font-size='10' fill='%23555555' letter-spacing='2'>Innovate • Build • Grow</text></svg>";
+
     const sampleAttachments = [
-      { name: "EndSem_Datesheet_April_2026.pdf", type: "pdf", size: "1.2 MB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { name: "Internship_NOC_Approval.pdf", type: "pdf", size: "840 KB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { name: "Technical_Round1_Shortlist.pdf", type: "pdf", size: "430 KB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { name: "Offer_Letter_TechNova_2026.pdf", type: "pdf", size: "1.2 MB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
+      { name: "EndSem_Datesheet_April_2026.pdf", type: "pdf", size: "840 KB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
       { name: "Campus_Hackathon_Schedule.pdf", type: "pdf", size: "2.1 MB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { name: "System_Architecture_Schema.png", type: "image", size: "1.8 MB", url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80" },
-      { name: "Server_Maintenance_Notice.pdf", type: "pdf", size: "320 KB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { name: "Offer_Confirmation_Letter.pdf", type: "pdf", size: "950 KB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" },
-      { name: "Receipt_INV_88421.pdf", type: "pdf", size: "180 KB", url: "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf" }
+      { name: "System_Architecture_Schema.png", type: "image", size: "1.8 MB", url: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=600&auto=format&fit=crop&q=80" }
     ];
 
     function generateDatasetFromApril() {
@@ -271,13 +294,9 @@
         { name: "HOD Computer Science", email: "hod_cse@college.edu" },
         { name: "Summer Internship Portal", email: "internships@college.edu" },
         { name: "Amazon Web Services", email: "billing@amazon.com" },
-        { name: "Figma Team", email: "updates@figma.com" },
-        { name: "Annual Hackathon 2026", email: "hackathon@techfest.org" },
         { name: "LinkedIn Job Alerts", email: "jobalerts@linkedin.com" },
-        { name: "Stripe Invoicing", email: "invoices@stripe.com" },
         { name: "Spotify Premium", email: "offers@spotify.com" },
         { name: "Zomato Delivery", email: "orders@zomato.com" },
-        { name: "Swiggy Instamart", email: "support@swiggy.in" },
         { name: "GeeksforGeeks Contests", email: "contests@geeksforgeeks.org" }
       ];
 
@@ -289,23 +308,18 @@
         "Security Alert: New login detected on Linux browser",
         "[PR #84] Fix state mutation and memory leak merged into main",
         "Daily Challenge: Longest Substring Without Repeating Characters",
-        "Notice regarding Final Year Project Review & GitHub Repository",
         "AWS Free Tier Alert: 85% of monthly limit reached",
-        "Collaborator invited you to edit project wireframes",
         "5 new Software Engineer Intern openings match your profile",
-        "Monthly invoice statement & billing receipt ready",
-        "Your Student discount subscription has been renewed",
         "Order Delivered: Enjoy your meal",
         "Developer Round-up: Mastering Memory Layout in C++"
       ];
 
       const bodies = [
-        "Dear Students,\nPlease note that the final datesheet for semester examinations is now published. Clear all library dues before hall ticket release.",
-        "Your summer internship application and submitted offer letter have been approved by the departmental coordinator. You may commence training.",
-        "Teams of 3 to 4 members can register for the 36-hour offline hackathon starting next weekend. Mentors from tier-1 tech firms will evaluate initial prototypes.",
+        "Dear Students,\nPlease note that the datesheet for the examinations has been published on the board. Clear all pending approvals before hall ticket distribution.",
+        "Your summer internship training application and verified documentation have been approved. You are permitted to commence on schedule.",
+        "Teams can now confirm participation for the upcoming hackathon. Mentor allocations will be issued in the auditorium.",
         "Attached is the technical assessment schedule. Bring your college ID card and verify your workstation prior to test initiation.",
-        "A new sign-in was detected on your account in New Delhi, India. If this was you, no action is needed.",
-        "Team Lead has merged the latest branch commit into master. Automated CI/CD integration pipelines have passed all tests."
+        "A new sign-in was detected on your account. If this was you, no action is needed."
       ];
 
       const list = [];
@@ -313,7 +327,23 @@
       const currentNow = Date.now();
       const totalSpan = currentNow - aprilFirst;
 
-      for (let i = 1; i <= 200; i++) {
+      // Seed 1: The exact TechNova email with logo and corporate signature
+      list.push({
+        id: 1,
+        sender: "Ritika Verma",
+        email: "hr@technova.com",
+        subject: "Offer Letter & Welcome to TechNova Solutions",
+        body: "Dear Candidate,\n\nWe are pleased to offer you the position of Software Development Intern at TechNova Solutions Pvt. Ltd.\n\nYour internship commencement date is scheduled for next Monday. Please review the attached formal offer letter and return a signed acknowledgment copy.\n\nBest regards,\n\nRitika Verma\nHuman Resources Executive\nTechNova Solutions Pvt. Ltd.\nhr@technova.com\n+91 98765 43210",
+        timestamp: currentNow - 3600000,
+        folder: "inbox",
+        starred: true,
+        unread: true,
+        logo: technovaLogoDataUri,
+        signatureImage: technovaLogoDataUri,
+        attachments: [sampleAttachments[0]]
+      });
+
+      for (let i = 2; i <= 200; i++) {
         const sender = senders[i % senders.length];
         const subject = subjects[(i * 3) % subjects.length];
         const body = bodies[(i * 5) % bodies.length];
@@ -325,14 +355,8 @@
         if (i % 14 === 0) folder = "trash";
         else if (i % 7 === 0) folder = "sent";
 
-        // Distribute attachments (roughly every 3rd email has a PDF or image)
         const attachments = [];
-        if (i % 3 === 0) {
-          attachments.push(sampleAttachments[i % sampleAttachments.length]);
-        }
-        if (i % 9 === 0) {
-          attachments.push(sampleAttachments[(i + 4) % sampleAttachments.length]);
-        }
+        if (i % 3 === 0) attachments.push(sampleAttachments[i % sampleAttachments.length]);
 
         list.push({
           id: i,
@@ -344,6 +368,8 @@
           folder,
           starred: i % 8 === 0 && folder !== "trash",
           unread: i <= 14 && folder === "inbox",
+          logo: null,
+          signatureImage: null,
           attachments
         });
       }
@@ -353,11 +379,11 @@
 
     let emails = [];
     try {
-      const saved = localStorage.getItem("gmail_mobile_docs_2026");
+      const saved = localStorage.getItem("gmail_mobile_custom_logos_2026");
       emails = saved ? JSON.parse(saved) : [];
       if (!Array.isArray(emails) || emails.length < 50) {
         emails = generateDatasetFromApril();
-        localStorage.setItem("gmail_mobile_docs_2026", JSON.stringify(emails));
+        localStorage.setItem("gmail_mobile_custom_logos_2026", JSON.stringify(emails));
       }
     } catch (e) {
       emails = generateDatasetFromApril();
@@ -366,10 +392,12 @@
     let activeFolder = "inbox";
     let activeEmailId = null;
     let composeAttachments = [];
+    let customSenderLogo = null;
+    let customSignatureLogo = null;
 
     function saveState() {
       emails.sort((a, b) => b.timestamp - a.timestamp);
-      localStorage.setItem("gmail_mobile_docs_2026", JSON.stringify(emails));
+      localStorage.setItem("gmail_mobile_custom_logos_2026", JSON.stringify(emails));
       render();
     }
 
@@ -378,7 +406,7 @@
       activeFolder = "inbox";
       saveState();
       toggleDrawer(false);
-      alert("Loaded 200 emails with documents & images!");
+      alert("Reloaded dataset with custom logos and signatures!");
     }
 
     function formatDate(ts) {
@@ -406,8 +434,7 @@
         if (!query) return true;
         return m.sender.toLowerCase().includes(query) || 
                m.subject.toLowerCase().includes(query) || 
-               m.body.toLowerCase().includes(query) ||
-               (m.attachments && m.attachments.some(a => a.name.toLowerCase().includes(query)));
+               m.body.toLowerCase().includes(query);
       });
 
       const unreadTotal = emails.filter(m => m.folder === "inbox" && m.unread).length;
@@ -435,7 +462,22 @@
         const cleanSenderName = mail.sender.replace("To: ", "");
         const avatarColor = getAvatarColor(cleanSenderName);
 
-        // Render attachment chips in list feed
+        // Custom logo or default letter avatar
+        let avatarMarkup = "";
+        if (mail.logo) {
+          avatarMarkup = `
+            <div class="w-9 h-9 rounded-full overflow-hidden bg-white border border-gray-200 shrink-0 flex items-center justify-center p-0.5">
+              <img src="${mail.logo}" class="w-full h-full object-contain" alt="Logo" />
+            </div>
+          `;
+        } else {
+          avatarMarkup = `
+            <div class="w-9 h-9 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0" style="background-color: ${avatarColor}">
+              ${cleanSenderName.charAt(0).toUpperCase()}
+            </div>
+          `;
+        }
+
         let attachmentChipsHTML = "";
         if (mail.attachments && mail.attachments.length > 0) {
           attachmentChipsHTML = `
@@ -453,10 +495,7 @@
         }
 
         item.innerHTML = `
-          <div class="w-9 h-9 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0" style="background-color: ${avatarColor}">
-            ${cleanSenderName.charAt(0).toUpperCase()}
-          </div>
-
+          ${avatarMarkup}
           <div class="flex-1 min-w-0">
             <div class="flex items-baseline justify-between mb-0.5">
               <span class="text-sm ${mail.unread ? 'font-bold text-gray-900' : 'font-medium text-gray-700'} truncate pr-2">
@@ -550,13 +589,35 @@
       document.getElementById("detailDate").textContent = new Date(mail.timestamp).toLocaleString([], { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
       document.getElementById("detailBody").textContent = mail.body;
 
-      const avatar = document.getElementById("detailAvatar");
-      avatar.textContent = mail.sender.replace("To: ", "").charAt(0).toUpperCase();
-      avatar.style.backgroundColor = getAvatarColor(mail.sender);
+      // Detail Avatar (Custom logo or letter)
+      const wrapper = document.getElementById("detailAvatarWrapper");
+      if (mail.logo) {
+        wrapper.innerHTML = `
+          <div class="w-10 h-10 rounded-full overflow-hidden bg-white border border-gray-200 p-0.5 flex items-center justify-center">
+            <img src="${mail.logo}" class="w-full h-full object-contain" alt="Logo" />
+          </div>
+        `;
+      } else {
+        const cleanName = mail.sender.replace("To: ", "");
+        wrapper.innerHTML = `
+          <div class="w-10 h-10 rounded-full text-white flex items-center justify-center font-bold text-sm shrink-0" style="background-color: ${getAvatarColor(cleanName)}">
+            ${cleanName.charAt(0).toUpperCase()}
+          </div>
+        `;
+      }
 
-      document.getElementById("detailStarIcon").className = `material-symbols-outlined ${mail.starred ? 'fill-icon !text-yellow-400' : ''}`;
+      // Inline signature image display
+      const sigContainer = document.getElementById("detailSignatureContainer");
+      const sigImg = document.getElementById("detailSignatureImage");
+      if (mail.signatureImage) {
+        sigContainer.classList.remove("hidden");
+        sigImg.src = mail.signatureImage;
+      } else {
+        sigContainer.classList.add("hidden");
+        sigImg.src = "";
+      }
 
-      // Render Attachment Cards in Detail View
+      // Attachments display
       const attachmentsContainer = document.getElementById("detailAttachmentsContainer");
       const attachmentsList = document.getElementById("detailAttachmentsList");
       
@@ -585,6 +646,7 @@
         attachmentsList.innerHTML = "";
       }
 
+      document.getElementById("detailStarIcon").className = `material-symbols-outlined ${mail.starred ? 'fill-icon !text-yellow-400' : ''}`;
       document.getElementById("emailDetailView").classList.remove("hidden");
     }
 
@@ -607,6 +669,10 @@
     function openComposeModal() {
       document.getElementById("inputDate").value = new Date().toISOString().slice(0, 10);
       composeAttachments = [];
+      customSenderLogo = null;
+      customSignatureLogo = null;
+      document.getElementById("senderLogoLabel").textContent = "Choose Image";
+      document.getElementById("signatureLogoLabel").textContent = "Choose Logo";
       renderComposeAttachments();
       document.getElementById("composeModal").classList.remove("hidden");
     }
@@ -614,10 +680,35 @@
     function closeComposeModal() {
       document.getElementById("composeForm").reset();
       composeAttachments = [];
+      customSenderLogo = null;
+      customSignatureLogo = null;
       document.getElementById("composeModal").classList.add("hidden");
     }
 
-    // Handles user attaching local files in Compose
+    // Handles Sender Avatar Upload
+    function handleSenderLogoUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        customSenderLogo = e.target.result;
+        document.getElementById("senderLogoLabel").textContent = "✓ " + file.name.slice(0, 10);
+      };
+      reader.readAsDataURL(file);
+    }
+
+    // Handles Signature / Inline Image Upload
+    function handleSignatureUpload(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        customSignatureLogo = e.target.result;
+        document.getElementById("signatureLogoLabel").textContent = "✓ " + file.name.slice(0, 10);
+      };
+      reader.readAsDataURL(file);
+    }
+
     function handleFileSelected(event) {
       const file = event.target.files[0];
       if (!file) return;
@@ -629,7 +720,7 @@
           name: file.name,
           type: isPdf ? 'pdf' : 'image',
           size: `${(file.size / 1024).toFixed(1)} KB`,
-          url: e.target.result // Base64 data URL
+          url: e.target.result
         });
         renderComposeAttachments();
       };
@@ -683,6 +774,8 @@
         timestamp,
         starred: false,
         unread: true,
+        logo: customSenderLogo,
+        signatureImage: customSignatureLogo,
         attachments: [...composeAttachments]
       });
 
